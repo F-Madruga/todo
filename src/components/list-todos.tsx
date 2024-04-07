@@ -71,7 +71,6 @@ export default function ListToDos() {
             <h3>{`Total ${pagination.total}`}</h3>
             <form onSubmit={handleSubmitNewToDo}>
                 <div>
-                    {/* <label htmlFor="newToDoInput">Add ToDo</label> */}
                     <input
                         className="newToDoInput"
                         type="text"
