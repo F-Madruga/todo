@@ -1,5 +1,5 @@
-import { ChangeEvent, useEffect, useState } from 'react';
-import { getMany, updateOne } from '../api/todo';
+import { ChangeEvent, MouseEvent, useEffect, useState } from 'react';
+import { deleteOne, getMany, insertOne, updateOne } from '../api/todo';
 import { Paginated, paginationFrom } from '../entities/paginated';
 import { ToDo } from '../entities/todo';
 
@@ -9,6 +9,7 @@ export default function ListToDos() {
     );
     const [toDos, setToDos] = useState<ToDo[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const [newToDo, setNewToDo] = useState<string>('');
 
     useEffect(() => {
         try {
@@ -37,13 +38,48 @@ export default function ListToDos() {
         }
     }
 
+    function handleSubmitNewToDo(event: ChangeEvent<HTMLFormElement>) {
+        event.preventDefault();
+        const insertedToDo = insertOne({ text: newToDo, completed: false });
+
+        setToDos([...toDos, insertedToDo]);
+    }
+
+    function handleNewToDoInputChange(event: ChangeEvent<HTMLInputElement>) {
+        event.preventDefault();
+        setNewToDo(event.target.value);
+    }
+
+    function handleDeleteClicktoDo(
+        event: MouseEvent<HTMLButtonElement>,
+        toDo: ToDo,
+    ) {
+        event.preventDefault();
+        const deletedToDo = deleteOne(toDo.id);
+
+        if (deletedToDo) {
+            setToDos(toDos.filter((toDo) => toDo.id !== deletedToDo.id));
+        }
+    }
+
     if (error) {
         return <div>Something went wrong</div>;
     }
 
     return (
         <>
-            <div>{`Total ${pagination.total}`}</div>
+            <h3>{`Total ${pagination.total}`}</h3>
+            <form onSubmit={handleSubmitNewToDo}>
+                <div>
+                    {/* <label htmlFor="newToDoInput">Add ToDo</label> */}
+                    <input
+                        className="newToDoInput"
+                        type="text"
+                        onChange={handleNewToDoInputChange}
+                    />
+                </div>
+                <button type="submit">Add ToDo</button>
+            </form>
             <ul>
                 {toDos.map((toDo) => (
                     <li key={toDo.id}>
@@ -54,6 +90,9 @@ export default function ListToDos() {
                             onChange={(e) => handleCheckedChange(e, toDo)}
                             checked={toDo.completed}
                         />
+                        <button onClick={(e) => handleDeleteClicktoDo(e, toDo)}>
+                            Delete
+                        </button>
                     </li>
                 ))}
             </ul>
