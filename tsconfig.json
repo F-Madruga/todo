@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "outDir": "./dist",
+    "strict": true,
+    "sourceMap": true,
+    "incremental": true,
+    "skipLibCheck": true,
+    "useUnknownInCatchVariables": false,
+    "resolveJsonModule": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    // FE specific
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx"
+  },
+  "include": ["./src"]
+}
