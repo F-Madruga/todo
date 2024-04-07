@@ -1,36 +1,62 @@
-import { useEffect, useState } from 'react';
-import { getAll } from '../api/todo';
-import { Paginated } from '../entities/paginated';
+import { ChangeEvent, useEffect, useState } from 'react';
+import { getMany, updateOne } from '../api/todo';
+import { Paginated, paginationFrom } from '../entities/paginated';
 import { ToDo } from '../entities/todo';
 
 export default function ListToDos() {
-    const [toDos, setToDos] = useState<Paginated<ToDo>>({
-        data: [],
-        total: 0,
-        skip: 0,
-        limit: 0,
-    });
+    const [pagination, setPagination] = useState<Omit<Paginated<ToDo>, 'data'>>(
+        { total: 0, skip: 0, limit: 30 },
+    );
+    const [toDos, setToDos] = useState<ToDo[]>([]);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        getAll().then((toDos) => setToDos(toDos));
-    }, [toDos]);
+        try {
+            const paginatedToDos = getMany(pagination.limit, pagination.skip);
 
-    // function handleChangeStatus() {}
+            setToDos(paginatedToDos.data);
+            setPagination(paginationFrom(paginatedToDos));
+        } catch (error) {
+            setError(error);
+        }
+    }, []);
+
+    function handleCheckedChange(
+        event: ChangeEvent<HTMLInputElement>,
+        item: ToDo,
+    ) {
+        const newToDo = updateOne(item.id, {
+            ...item,
+            completed: event.target.checked,
+        });
+
+        if (newToDo) {
+            setToDos(
+                toDos.map((toDo) => (toDo.id === newToDo.id ? newToDo : toDo)),
+            );
+        }
+    }
+
+    if (error) {
+        return <div>Something went wrong</div>;
+    }
 
     return (
-        <div>
+        <>
+            <div>{`Total ${pagination.total}`}</div>
             <ul>
-                {toDos.data.map((toDo) => (
+                {toDos.map((toDo) => (
                     <li key={toDo.id}>
-                        <label htmlFor={`${toDo.id}-input`}>{toDo.todo}</label>
+                        <label htmlFor={`${toDo.id}-input`}>{toDo.text}</label>
                         <input
                             className={`${toDo.id}-input`}
                             type="checkbox"
-                            defaultChecked={toDo.completed}
+                            onChange={(e) => handleCheckedChange(e, toDo)}
+                            checked={toDo.completed}
                         />
                     </li>
                 ))}
             </ul>
-        </div>
+        </>
     );
 }

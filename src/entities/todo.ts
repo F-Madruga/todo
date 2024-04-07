@@ -1,6 +1,5 @@
 export interface ToDo {
     id: number;
-    todo: string;
+    text: string;
     completed: boolean;
-    userId: number;
 }

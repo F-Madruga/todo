@@ -1,138 +1,63 @@
 import { Paginated } from '../entities/paginated';
 import { ToDo } from '../entities/todo';
 
-export async function getAll(): Promise<Paginated<ToDo>> {
-    try {
-        const result = await (
-            await window.fetch('https://dummyjson.com/todos', {
-                method: 'GET',
-                headers: {
-                    'content-type': 'application/json;charset=UTF-8',
-                },
-            })
-        ).json();
+let data: ToDo[] = [
+    { id: 1, text: 'test 1', completed: true },
+    { id: 2, text: 'test 2', completed: false },
+    { id: 3, text: 'test 3', completed: false },
+];
+const MAX_LIMIT = 30;
 
-        return {
-            data: result.todos || [],
-            total: result.total || 0,
-            skip: result.skip || 0,
-            limit: result.limit || 0,
-        };
-    } catch (error) {
-        console.error(error);
-        return {
-            data: [],
-            limit: 0,
-            total: 0,
-            skip: 0,
-        };
-    }
+export function getMany(limit = MAX_LIMIT, skip = 0): Paginated<ToDo> {
+    limit = limit > MAX_LIMIT ? MAX_LIMIT : limit;
+
+    return {
+        data: data.slice(skip * limit, skip * limit + limit),
+        total: data.length,
+        skip,
+        limit,
+    };
 }
 
-export async function getAllPaginated(
-    limit: number,
-    skip: number,
-): Promise<Paginated<ToDo>> {
-    try {
-        const result = await (
-            await window.fetch(
-                `https://dummyjson.com/todos/s?limit=${limit}&skip=${skip}`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'content-type': 'application/json;charset=UTF-8',
-                    },
-                },
-            )
-        ).json();
+export function updateOne(id: number, newToDo: Partial<Omit<ToDo, 'id'>>) {
+    let result: ToDo | undefined;
 
-        return {
-            data: result.todos || [],
-            total: result.total || 0,
-            skip: result.skip || 0,
-            limit: result.limit || 0,
-        };
-    } catch (error) {
-        console.error(error);
-        return {
-            data: [],
-            limit: 0,
-            total: 0,
-            skip: 0,
-        };
-    }
+    data = data.map((toDo) => {
+        if (toDo.id === id) {
+            result = { ...toDo, ...newToDo };
+            return result;
+        }
+        return toDo;
+    });
+
+    return result;
 }
 
-export async function getById(id: number): Promise<ToDo | undefined> {
-    try {
-        const result = await (
-            await window.fetch(`https://dummyjson.com/todos/${id}`, {
-                method: 'GET',
-                headers: {
-                    'content-type': 'application/json;charset=UTF-8',
-                },
-            })
-        ).json();
-
-        return result as ToDo;
-    } catch (error) {
-        console.error(error);
-        return undefined;
-    }
+export function getById(id: number) {
+    return data.filter((toDo) => toDo.id === id)[0];
 }
 
-export async function insertOne(toDo: Omit<ToDo, 'id'>) {
-    try {
-        const result = await (
-            await window.fetch('https://dummyjson.com/todos/add', {
-                method: 'POST',
-                headers: {
-                    'content-type': 'application/json;charset=UTF-8',
-                },
-                body: JSON.stringify(toDo),
-            })
-        ).json();
+export function insertOne(toDo: Omit<ToDo, 'id'>) {
+    const newItem = {
+        ...toDo,
+        id: data.length ? data[data.length - 1].id + 1 : 1,
+    };
 
-        return result as ToDo;
-    } catch (error) {
-        console.error(error);
-        return undefined;
-    }
+    data.push(newItem);
+
+    return newItem;
 }
 
-export async function updateOne(id: number, toDo: Partial<Omit<ToDo, 'id'>>) {
-    try {
-        const result = await (
-            await window.fetch(`https://dummyjson.com/todos/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'content-type': 'application/json;charset=UTF-8',
-                },
-                body: JSON.stringify(toDo),
-            })
-        ).json();
+export function deleteOne(id: number) {
+    let result: ToDo | undefined;
 
-        return result as ToDo;
-    } catch (error) {
-        console.error(error);
-        return undefined;
-    }
-}
+    data = data.filter((toDo) => {
+        if (toDo.id === id) {
+            result = toDo;
+        } else {
+            return toDo;
+        }
+    });
 
-export async function deleteOne(id: number) {
-    try {
-        const result = await (
-            await window.fetch(`https://dummyjson.com/todos/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'content-type': 'application/json;charset=UTF-8',
-                },
-            })
-        ).json();
-
-        return result as ToDo;
-    } catch (error) {
-        console.error(error);
-        return undefined;
-    }
+    return result;
 }
